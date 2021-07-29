@@ -2,7 +2,7 @@
 Example script to train a classifier to classify sentences from books.
 
 Usage:
-    python -m examples.books.train <training_config_filepath> <optional_args>
+    python -m examples.books.train <args> <optional_args>
 """
 
 import os
