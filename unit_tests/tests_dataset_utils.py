@@ -10,27 +10,9 @@ from transformers import AutoTokenizer, BatchEncoding
 from text_classification import dataset_utils
 
 
-@pytest.fixture
-def class_labels() -> List[str]:
-    """
-    create a dummy ordered list of all possible unique class labels
-    """
-    return ["Label " + str(i) for i in range(4)]
-
-
-@pytest.fixture
-def multilabel_examples(
-        class_labels: List[str]) -> List[dataset_utils.InputMultilabelExample]:
-    """
-    create a dummy list of examples
-    """
-    texts = ["Text " + str(i) for i in range(10)]
-    examples = [dataset_utils.InputMultilabelExample(i, text, class_labels)
-                for i, text in enumerate(texts)]
-    return examples
-
-
 @pytest.mark.parametrize("predict", [True, False])
+@pytest.mark.usefixtures("multilabel_examples")
+@pytest.mark.usefixtures("class_labels")
 def test_MultilabelDataset(
         multilabel_examples: List[dataset_utils.InputMultilabelExample],
         class_labels: List[str],

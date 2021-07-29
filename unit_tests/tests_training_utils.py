@@ -8,33 +8,9 @@ from tempfile import mkdtemp
 
 import pytest
 import numpy as np
-from transformers import EvalPrediction, AutoTokenizer
+from transformers import EvalPrediction
 
 from text_classification import configs, training_utils, dataset_utils, model_utils
-
-
-@pytest.fixture
-def num_labels() -> int:
-    return 4
-
-
-@pytest.fixture
-def multilabel_dataset(num_labels: int) -> dataset_utils.MultilabelDataset:
-    """
-    create a dummy multilabel dataset
-    """
-    labels = ["Label " + str(i) for i in range(num_labels)]
-    examples = [dataset_utils.InputMultilabelExample(i, "Text " + str(i), labels)
-                for i in range(10)]
-    tokenizer = AutoTokenizer.from_pretrained("roberta-base")
-    max_length = 128
-    return dataset_utils.MultilabelDataset(
-        examples,
-        labels,
-        tokenizer,
-        max_length,
-        predict=False
-    )
 
 
 def test_compute_multilabel_accuracy() -> None:
@@ -52,6 +28,8 @@ def test_compute_multilabel_accuracy() -> None:
 
 
 # @pytest.mark.skip(reason="long running unit test")
+@pytest.mark.usefixtures("multilabel_dataset")
+@pytest.mark.usefixtures("num_labels")
 @pytest.mark.parametrize("do_eval", [True, False])
 @pytest.mark.parametrize("do_class_weights", [True, False])
 def test_train_multilabel_classifier(
