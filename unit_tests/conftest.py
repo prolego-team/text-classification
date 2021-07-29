@@ -34,8 +34,8 @@ def multilabel_examples_without_labels() -> List[InputMultilabelExample]:
 
 @pytest.fixture
 def multilabel_dataset(
-    multilabel_examples: List[InputMultilabelExample],
-    class_labels: List[str]) -> MultilabelDataset:
+        multilabel_examples: List[InputMultilabelExample],
+        class_labels: List[str]) -> MultilabelDataset:
     """
     create a dummy multilabel dataset
     """
