@@ -20,11 +20,17 @@ RANDOM_SEED = 12345
 
 TRAINING_ARGUMENTS = {
     "do_train": True,
+    "evaluation_strategy": "steps",
+    "logging_steps": 2,
     "num_train_epochs": 1.0,
     "per_device_train_batch_size": 8,
     "per_device_eval_batch_size": 16,
     "do_predict": False,
     "block_size": 128,
+    "seed": RANDOM_SEED,
+    # "gradient_accumulation_steps": 1,
+    # "save_steps" # TODO: look into whether we want to add this
+    # "save_total_limit": 1
 }
 
 
@@ -33,11 +39,11 @@ def split_txt_file(txt_filepath: str) -> List[str]:
     split text in txt file into sentences
     """
     split_chars = [".", "!", ";", "?"]
-    split_regex = " |".join(split_chars)
+    split_regex = "|".join(map(re.escape, split_chars))
     with open(txt_filepath, "r") as f:
-        data = f.readlines()
-        data = data.replace("\n", "")
-        split_data = re.split(split_regex, data)
+        data = f.read()
+    data = data.replace("\n", " ")
+    split_data = re.split(split_regex, data)
     return split_data
 
 
@@ -63,24 +69,37 @@ def main(**kwargs):
                          for i, sentence in enumerate(sentences)]
         examples += book_examples
 
-    # load model and tokenizer, save tokenizer
+    # load tokenizer
     num_labels = len(book_titles)
-    model, tokenizer = model_utils.load_pretrained_model_and_tokenizer(
+    _, tokenizer = model_utils.load_pretrained_model_and_tokenizer(
         training_config.model_config,
         num_labels)
-    tokenizer.save_pretrained(TRAINING_ARGUMENTS["output_dir"])
 
     # create train and eval datasets
     train_examples, eval_examples = train_test_split(
-        examples, test_size=0.2, random_state=RANDOM_SEED, shuffle=True)
-    train_dataset = dataset_utils.MultilabelDataset(train_examples, tokenizer)
-    eval_dataset = dataset_utils.MultilabelDataset(eval_examples, tokenizer)
+        examples, test_size=0.01, random_state=RANDOM_SEED, shuffle=True)
+    # train_examples = train_examples[:100]
+    # eval_examples = eval_examples[:10]
+    train_dataset = dataset_utils.MultilabelDataset(
+        train_examples,
+        book_titles,
+        tokenizer,
+        TRAINING_ARGUMENTS["block_size"],
+        predict=False)
+    eval_dataset = dataset_utils.MultilabelDataset(
+        eval_examples,
+        book_titles,
+        tokenizer,
+        TRAINING_ARGUMENTS["block_size"],
+        predict=False)
 
     # train model
     training_utils.train_multilabel_classifier(
         train_dataset,
         eval_dataset,
-        model,
+        training_config.model_config,
+        num_labels,
+        TRAINING_ARGUMENTS,
         do_eval=True,
         do_class_weights=kwargs["do_class_weights"]
     )

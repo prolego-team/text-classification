@@ -64,9 +64,7 @@ def test_train_multilabel_classifier(
     """
 
     # load model
-    model_config = configs.ModelConfig("roberta-base", "main", None, "classification")
-    model, _ = model_utils.load_pretrained_model_and_tokenizer(
-        model_config, num_labels, use_fast=False)
+    model_config = configs.ModelConfig("roberta-base", "main", None, "multilabel")
 
     # set up training arguments
     tmp_dir = mkdtemp()
@@ -85,10 +83,12 @@ def test_train_multilabel_classifier(
     training_utils.train_multilabel_classifier(
         multilabel_dataset,
         eval_dataset,
-        model,
+        model_config,
+        num_labels,
         training_arguments,
-        do_eval,
-        do_class_weights
+        use_fast=model_utils.USE_FAST_TOKENIZER,
+        do_eval=do_eval,
+        do_class_weights=do_class_weights
     )
 
     # check that model was written to output dir

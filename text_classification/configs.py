@@ -37,8 +37,8 @@ def parse_model_config(model_data: Dict[str, str]) -> ModelConfig:
     return ModelConfig(
         model_data.get("model_name_or_dirpath"),
         model_data.get("revision"),
-        model_data.get("task_name"),
-        model_data.get("saved_model_dirpath")
+        model_data.get("saved_model_dirpath"),
+        model_data.get("task_name")
     )
 
 

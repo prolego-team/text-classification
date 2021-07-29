@@ -4,14 +4,13 @@ from typing import Dict, Optional
 import numpy as np
 import torch
 from transformers import (
-    AutoModelForSequenceClassification,
     HfArgumentParser,
     TrainingArguments,
     EvalPrediction,
     set_seed
 )
 
-from text_classification import dataset_utils, model_utils
+from text_classification import configs, dataset_utils, model_utils
 
 
 def compute_multilabel_accuracy(
@@ -29,8 +28,10 @@ def compute_multilabel_accuracy(
 def train_multilabel_classifier(
         train_dataset: dataset_utils.MultilabelDataset,
         eval_dataset: Optional[dataset_utils.MultilabelDataset],
-        model: AutoModelForSequenceClassification,
+        model_config: configs.ModelConfig,
+        num_labels: int,
         training_arguments: dict,
+        use_fast: bool = model_utils.USE_FAST_TOKENIZER,
         do_eval: bool = True,
         do_class_weights: bool = False) -> None:
     """
@@ -43,10 +44,19 @@ def train_multilabel_classifier(
     else:
         class_weights = None
 
-    # set up trainer
+    # build training args
     training_arguments["do_eval"] = do_eval
     parser = HfArgumentParser(TrainingArguments)
     training_args = parser.parse_dict(training_arguments)[0]
+
+    # set seed for training
+    set_seed(training_args.seed)
+
+    # load model and tokenizer
+    model, tokenizer = model_utils.load_pretrained_model_and_tokenizer(
+        model_config, num_labels, use_fast)
+
+    # set up trainer
     trainer = model_utils.MultilabelTrainer(
         model=model,
         args=training_args,
@@ -56,12 +66,10 @@ def train_multilabel_classifier(
     )
     trainer.set_class_weights(class_weights)
 
-    # set seed for training
-    set_seed(training_args.seed)
-
-    # train and save model
+    # train and save model and tokenizer
     trainer.train()
     trainer.save_model(training_args.output_dir)
+    tokenizer.save_pretrained(training_args.output_dir)
 
     # eval and write results to txt file
     if do_eval:
@@ -72,4 +80,4 @@ def train_multilabel_classifier(
                 f.write("%s = %s\n" % (k, str(v)))
 
     # release GPU memory
-    torch.cuda.empty_cache
+    torch.cuda.empty_cache()
