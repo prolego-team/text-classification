@@ -56,7 +56,7 @@ def split_txt_file(txt_filepath: str) -> List[str]:
 
 @click.command()
 @click.argument("training_config_filepath", type=click.Path(exists=True))
-@click.option("inference_config_filepath", default="inference_config.json",
+@click.option("--inference_config_filepath", "-icf", default="inference_config.json",
               help="Path to save the inference config file created after training.")
 @click.option("--do_class_weights", "-cw", is_flag=True,
               help="Weight the loss by relative class frequency to account for class imbalance.")
