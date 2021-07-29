@@ -1,6 +1,10 @@
 """
-train a classifier to classify sentences from books
+Example script to train a classifier to classify sentences from books.
+
+Usage:
+    python -m examples.books.train <training_config_filepath> <optional_args>
 """
+
 import os
 import re
 from typing import List
@@ -18,9 +22,12 @@ from text_classification import (
 
 RANDOM_SEED = 12345
 
+# see huggingface.co documentation for a full list of training arguments
+# and what they mean:
+# https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments
 TRAINING_ARGUMENTS = {
     "do_train": True,
-    "evaluation_strategy": "steps",
+    "evaluation_strategy": "steps",  # to disable evaluation during training, change to "no"
     "logging_steps": 2,
     "num_train_epochs": 1.0,
     "per_device_train_batch_size": 8,
@@ -28,15 +35,15 @@ TRAINING_ARGUMENTS = {
     "do_predict": False,
     "block_size": 128,
     "seed": RANDOM_SEED,
-    # "gradient_accumulation_steps": 1,
-    # "save_steps" # TODO: look into whether we want to add this
-    # "save_total_limit": 1
+    "gradient_accumulation_steps": 1,
+    "save_strategy": "no",  # to save intermediate model checkpoints duing training, change to "steps" or "epochs",
+    "weight_decay": 0  # make non-zero (e.g., 0.02) to apply regularization in AdamW optimizer
 }
 
 
 def split_txt_file(txt_filepath: str) -> List[str]:
     """
-    split text in txt file into sentences
+    read a text file and split text into sentences
     """
     split_chars = [".", "!", ";", "?"]
     split_regex = "|".join(map(re.escape, split_chars))
@@ -49,9 +56,24 @@ def split_txt_file(txt_filepath: str) -> List[str]:
 
 @click.command()
 @click.argument("training_config_filepath", type=click.Path(exists=True))
+@click.option("inference_config_filepath", default="inference_config.json",
+              help="Path to save the inference config file created after training.")
 @click.option("--do_class_weights", "-cw", is_flag=True,
               help="Weight the loss by relative class frequency to account for class imbalance.")
 def main(**kwargs):
+    """
+    Train a transformers model to classify sentences based on originating novel.
+
+    \b
+    TRAINING_CONFIG_FILEPATH: Path to training config .json file used for training. See
+    test_data/training_config.json for an example. \f
+
+    Optional:
+        inference_config_filepath: Path where the inference config associated with the trained
+           model should be written. Defaults to inference_config.json.
+        do_class_weights: If True, modify the loss function to weight scores by the relative
+           class frequency to account for class imbalance.
+    """
 
     # read training config
     training_config = configs.read_config_for_training(kwargs["training_config_filepath"])
@@ -105,6 +127,14 @@ def main(**kwargs):
     )
 
     # create and save inference config
+    trained_model_config = configs.ModelConfig(
+        training_config.model_config.saved_model_dirpath,
+        "main",
+        None,
+        "multilabel")
+    inference_config = configs.InferenceConfig(
+        trained_model_config, book_titles, TRAINING_ARGUMENTS["block_size"])
+    configs.save_config_for_inference(inference_config, kwargs["inference_config_filepath"])
 
 
 if __name__ == "__main__":

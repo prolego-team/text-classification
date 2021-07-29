@@ -24,6 +24,7 @@ class TrainingConfig():
 class InferenceConfig():
     model_config: ModelConfig
     class_labels: List[str]
+    max_length: int
 
     def __post_init__(self):
         # derive the number of labels from the list of class labels
@@ -72,5 +73,23 @@ def read_config_for_inference(inference_config_filepath: str) -> InferenceConfig
     model_config = parse_model_config(model_data)
 
     class_labels = [str(label) for label in data.get("class_labels")]
+    max_length = int(data.get("max_length"))
 
-    return InferenceConfig(model_config, class_labels)
+    return InferenceConfig(model_config, class_labels, max_length)
+
+
+def save_config_for_inference(
+        inference_config: InferenceConfig,
+        inference_config_filepath: str) -> None:
+    """
+    write inference_config to a file
+    """
+
+    inference_data = {
+        "class_labels": inference_config.class_labels,
+        "max_length": inference_config.max_length,
+        "model": inference_config.model_config.__dict__
+    }
+
+    with open(inference_config_filepath, "w") as f:
+        json.dump(inference_data, f, indent=4, sort_keys=True)

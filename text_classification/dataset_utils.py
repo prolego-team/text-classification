@@ -35,8 +35,12 @@ class MultilabelDataset():
 
         # one-hot encoding
         self.num_labels = len(class_labels)
-        self.label_to_int = {l: i for i, l in enumerate(class_labels)}
-        self.labels = [self.to_one_hot(example) for example in examples]
+        if predict:
+            # assign all labels to a dummy label (null)
+            self.labels = [[0] * self.num_labels for _ in examples]
+        else:
+            self.label_to_int = {l: i for i, l in enumerate(class_labels)}
+            self.labels = [self.to_one_hot(example) for example in examples]
 
         # store example guids and input text
         self.texts = [example.text for example in examples]
