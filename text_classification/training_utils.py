@@ -1,3 +1,7 @@
+"""
+Utilities for running model training
+"""
+
 import os
 from typing import Dict, Optional
 
@@ -17,6 +21,7 @@ def compute_multilabel_accuracy(
         prediction: EvalPrediction,
         threshold: float = 0.5) -> Dict[str, float]:
     """
+    Compute accuracy of one-hot encoded representation of predictions
     accuracy = # of correct predictions / # of total predictions
     """
     # apply activation
@@ -36,7 +41,11 @@ def train_multilabel_classifier(
         do_class_weights: bool = False) -> None:
     """
     training loop for multi-label classification
-    training_arguments: "output_dir" is a required key in the dictionary
+    Notes:
+       training_arguments: "output_dir" is a required key in the dictionary
+       do_eval: if True, evaluation during training (every logging_steps steps)
+          and at the end of training is performed. Note that if eval_dataset is None,
+          do_eval is automatically reset to False
     """
 
     if do_class_weights:
@@ -45,7 +54,8 @@ def train_multilabel_classifier(
         class_weights = None
 
     # build training args
-    training_arguments["do_eval"] = do_eval
+    do_eval = (do_eval) and (eval_dataset is not None)  # if eval_dataset is None, set do_eval to False
+    training_arguments["do_eval"] = do_eval  # do evaluation every logging_steps steps
     parser = HfArgumentParser(TrainingArguments)
     training_args = parser.parse_dict(training_arguments)[0]
 

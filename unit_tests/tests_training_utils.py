@@ -14,6 +14,10 @@ from text_classification import configs, training_utils, dataset_utils, model_ut
 
 
 def test_compute_multilabel_accuracy() -> None:
+    """
+    test the compute_multilabel_accuracy computes the
+    expected accuracy results
+    """
     label_ids = np.array([[0, 0, 1, 1],
                           [0, 0, 1, 0],
                           [1, 0, 0, 0]])

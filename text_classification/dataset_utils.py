@@ -1,3 +1,8 @@
+"""
+Utilities for handling data, e.g., reading and parsing examples
+and creating datasets compatible with HuggingFace Trainer.
+"""
+
 from dataclasses import dataclass
 from typing import Optional, List
 
@@ -8,6 +13,13 @@ from transformers import PreTrainedTokenizer, BatchEncoding
 
 @dataclass
 class InputMultilabelExample:
+    """
+    An example for multilabel classification has a few components:
+       guid: unique identifier
+       text: text data, e.g., word, sentence, phrase, paragraph
+       labels: list of (string) classes associated with text,
+          or None if labels don't exist
+    """
     guid: str
     text: str
     labels: Optional[List[str]]
@@ -77,6 +89,10 @@ class MultilabelDataset():
 
 
 def compute_class_weights(one_hot_labels: List[int]) -> np.array:
+    """
+    compute negative:positive example ratio, used for weighting
+    class imbalance within the loss function during model training
+    """
     one_hot_labels = np.array(one_hot_labels)
     positive_count = np.sum(one_hot_labels, axis=0)
     negative_count = np.sum((one_hot_labels == 0).astype(int), axis=0)

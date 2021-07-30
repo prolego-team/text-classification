@@ -28,7 +28,7 @@ RANDOM_SEED = 12345
 TRAINING_ARGUMENTS = {
     "do_train": True,
     "evaluation_strategy": "steps",  # to disable evaluation during training, change to "no"
-    "logging_steps": 2,
+    "logging_steps": 50,
     "num_train_epochs": 1.0,
     "per_device_train_batch_size": 8,
     "per_device_eval_batch_size": 16,

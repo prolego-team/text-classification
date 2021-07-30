@@ -9,6 +9,15 @@ import json
 
 @dataclass
 class ModelConfig():
+    """
+    Contains some basic information about a model:
+       model_name_or_dirpath: Path to base model, can be either a
+          filesystem location or location in huggingface.co
+       revision: SHA revision ID for a HuggingFace model
+       saved_model_dirpath: Path to save the output model following
+          training. Set to None if not relevant
+       task_name: currently unused
+    """
     model_name_or_dirpath: str
     revision: str
     saved_model_dirpath: Optional[str]
@@ -17,16 +26,25 @@ class ModelConfig():
 
 @dataclass
 class TrainingConfig():
+    """
+    configuration settings for model training workflow
+    """
     model_config: ModelConfig
 
 
 @dataclass
 class InferenceConfig():
+    """
+    configuration settings for model inference workflow
+    """
     model_config: ModelConfig
     class_labels: List[str]
     max_length: int
 
     def __post_init__(self):
+        """
+        this is run following initialization
+        """
         # derive the number of labels from the list of class labels
         self.num_labels = len(self.class_labels)
 

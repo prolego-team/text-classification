@@ -25,3 +25,19 @@ The environment only needs to be set up once. After it has been created, it can 
 Test set-up by running the unit tests and ensuring that they all pass:
 
         python -m pytest unit_tests
+
+## Examples
+
+### Classify Sentences from Books
+
+Build a multi-label classification model to classify sentences as belonging to one or more books.
+
+To train:
+
+        python -m examples.books.train <args> <optional_args>
+
+A trained model and inference config json file will be created. To run inference:
+
+        python -m examples.books.predict <args>
+
+Predictions for each sentence will be written to an output .tsv file.

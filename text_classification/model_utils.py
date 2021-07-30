@@ -1,3 +1,7 @@
+"""
+Utilities for training models
+"""
+
 from typing import Tuple, Optional, List
 from copy import deepcopy
 
@@ -48,7 +52,19 @@ def load_pretrained_model_and_tokenizer(
 
 
 class MultilabelTrainer(Trainer):
+    """
+    A multi-label trainer just overrides the default compute_loss
+    function with binary cross-entropy loss.
+    Also includes support for weighted loss to address class imbalance.
+    """
     def set_class_weights(self, class_weights: Optional[List[float]]):
+        """
+        add class weights
+        Note: This needs to be run before model training. If class weights
+        are not required, pass None as the input.
+        """
+        # TODO: There's probably a cleaner way to do this, e.g., modifying the __init__
+        # to take class_weights as an optional input.
         self.class_weights = class_weights
 
     def compute_loss(self, model, inputs, return_outputs=False):

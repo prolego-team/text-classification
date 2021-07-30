@@ -1,3 +1,8 @@
+"""
+Utilities for running inference (i.e., prediction) on a
+trained model
+"""
+
 from typing import List, Optional
 from tempfile import mkdtemp
 
