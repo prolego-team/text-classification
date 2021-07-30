@@ -47,15 +47,11 @@ def main(**kwargs):
         thresholds=None
     )
 
-    for example in prediction_examples:
-        print(example.text)
-        print(example.labels)
-        print()
-    # TODO: save output
-    #  dataset_utils.multilabel_examples_to_tsv(
-    #      prediction_examples,
-    #      kwargs["output_tsv_filepath"]
-    #  )
+    # save output to a tsv file
+    dataset_utils.multilabel_examples_to_tsv(
+        prediction_examples,
+        kwargs["output_tsv_filepath"]
+    )
 
 
 if __name__ == "__main__":
