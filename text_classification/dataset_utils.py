@@ -4,11 +4,15 @@ and creating datasets compatible with HuggingFace Trainer.
 """
 
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict
+import re
 
 import numpy as np
+import pandas as pd
 import torch
 from transformers import PreTrainedTokenizer, BatchEncoding
+
+from text_classification.common import dataframe_to_tsv, tsv_to_dataframe
 
 
 @dataclass
@@ -97,3 +101,113 @@ def compute_class_weights(one_hot_labels: List[int]) -> np.array:
     positive_count = np.sum(one_hot_labels, axis=0)
     negative_count = np.sum((one_hot_labels == 0).astype(int), axis=0)
     return negative_count / positive_count
+
+
+def multilabel_examples_to_tsv(
+        multilabel_examples: List[InputMultilabelExample],
+        tsv_filepath: str) -> None:
+    """
+    Write a list of multilabel examples to tsv.
+    """
+
+    # put examples in a dataframe
+    # InputMultilabelExample.guid, text, labels
+    examples_dicts = [
+        {"guid": str(example.guid),
+         "text": example.text,
+         "labels": example.labels}
+        for example in multilabel_examples]
+
+    examples_df = pd.DataFrame(examples_dicts)
+
+    dataframe_to_tsv(examples_df, tsv_filepath)
+
+
+def tsv_to_multilabel_examples(
+        tsv_filepath: str,
+        generate_guids: bool = False) -> List[InputMultilabelExample]:
+    """
+    Read a tsv file and convert to a list of multilabel examples. If
+    generate_guids is True, also create a unique (to this dataset) id
+    for each example.
+
+    Note: There are specific formatting assumptions for the tsv file.
+    Refer to test_data/multilabel_examples.tsv (or, if the data is unlabeled,
+    test_data/multilabel_examples_without_labels.tsv) for an example.
+    Specifically:
+       - the tsv file should have a column header called "text"
+       - if labels exist, the tsv file should also have a header called "labels"
+       - if generate_guids is False, the tsv file should also have a header called "guid"
+       - rows under the "text" and "guid" headers both contain strings
+       - rows under the "labels" header contain lists of strings (lists indicated using square brackets [])
+    """
+
+    # read tsv as dataframe
+    dataframe = tsv_to_dataframe(tsv_filepath)
+    if generate_guids:
+        dataframe["guid"] = range(dataframe.shape[0])
+
+    # Create a label mapping function. If labels exist in the dataframe,
+    # the mapping function converts a string to list (e.g.,
+    # "['Label 1', 'Label 2']" to ["Label 1", "Label 2"]), Otherwise,
+    # the function just returns None
+    if "labels" in dataframe.columns:
+        label_mapping = lambda labels: re.sub("'|\"", "", str(labels))[1:-1].split(",")
+    else:
+        # create a dummy "labels" column in the dataframe
+        dataframe["labels"] = ""
+        label_mapping = lambda labels: None
+
+    multilabel_examples = [
+        InputMultilabelExample(
+            str(row["guid"]),
+            str(row["text"]),
+            label_mapping(row["labels"]))
+        for _, row in dataframe.iterrows()
+    ]
+
+    return multilabel_examples
+
+
+def dictionaries_to_multilabel_examples(
+        example_dictionaries: List[Dict],
+        generate_guids: bool) -> List[InputMultilabelExample]:
+    """
+    Convert a list of dictionaries (one per example) to a list
+    of multi-label examples. If generate_guids is True, also
+    create a unique (to this dataset) id for each example.
+
+    Assumptions:
+       - each dictionary contains the key "text"
+       - if labels exist, each dictionary contains the key "labels"
+       - if generate_guids is False, each dictionary also contains
+         a key called "guid"
+       - "text" and "guid" each contain a string
+       - "labels" contains a list of strings or None
+
+    See multilabel_example_dictionaries and
+    multilabel_example_dictionaries_without_labels within
+    unit_tests/conftest.py for an example.
+    """
+    if generate_guids:
+        return [InputMultilabelExample(str(i),
+                                       example_dict["text"],
+                                       example_dict.get("labels"))
+                for i, example_dict in enumerate(example_dictionaries)]
+    else:
+        return [InputMultilabelExample(example_dict["guid"],
+                                       example_dict["text"],
+                                       example_dict.get("labels"))
+                for example_dict in example_dictionaries]
+
+
+def sorted_class_labels(multilabel_examples: List[InputMultilabelExample]) -> List[str]:
+    """
+    returns a sorted list of class labels from multilabel examples
+    """
+    label_list = [example.labels for example in multilabel_examples
+                  if example.labels is not None]
+    if len(label_list) == 0:
+        return []
+    else:
+        return sorted(set([label for labels in label_list for label in labels]))

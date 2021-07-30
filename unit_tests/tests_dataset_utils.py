@@ -2,7 +2,10 @@
 unit tests for dataset_utils.py
 """
 
+import os
+import shutil
 from typing import List
+from tempfile import mkdtemp
 
 import pytest
 from transformers import AutoTokenizer, BatchEncoding
@@ -63,3 +66,68 @@ def test_compute_class_weights() -> None:
     actual_class_weights = dataset_utils.compute_class_weights(one_hot_labels)
     for expected, actual in zip(expected_class_weights, actual_class_weights):
         assert actual == pytest.approx(expected)
+
+
+@pytest.mark.usefixtures("multilabel_examples")
+def test_multilabel_examples_to_tsv(
+        multilabel_examples: List[dataset_utils.InputMultilabelExample]) -> None:
+    """
+    test that output tsv file is created by multilabel_exampels_to_tsv
+    """
+    tmp_dir = mkdtemp()
+    out_tsv_filepath = os.path.join(tmp_dir, "out.tsv")
+    dataset_utils.multilabel_examples_to_tsv(
+        multilabel_examples,
+        out_tsv_filepath
+    )
+    assert os.path.exists(out_tsv_filepath)
+
+    # clean up temporary directory
+    shutil.rmtree(tmp_dir)
+
+
+@pytest.mark.parametrize("generate_guids", [True, False])
+@pytest.mark.parametrize("tsv_filename", ["multilabel_examples.tsv",
+                                          "multilabel_examples_without_labels.tsv"])
+def test_tsv_to_multilabel_examples(
+        generate_guids: bool,
+        tsv_filename: str) -> None:
+    """
+    test that tsv is parsed into multilabel examples
+    """
+    tsv_filepath = os.path.join("test_data", tsv_filename)
+    multilabel_examples = dataset_utils.tsv_to_multilabel_examples(
+        tsv_filepath, generate_guids=generate_guids)
+    for example in multilabel_examples:
+        assert type(example) == dataset_utils.InputMultilabelExample
+
+
+@pytest.mark.parametrize("example_dictionaries", ["multilabel_example_dictionaries",
+                                                  "multilabel_example_dictionaries_without_labels"])
+@pytest.mark.parametrize("generate_guids", [True, False])
+def test_dictionaries_to_multilabel_examples(
+        example_dictionaries,
+        generate_guids,
+        request) -> None:
+    """
+    test that a list of multilabel examples are created
+    """
+    example_dictionaries = request.getfixturevalue(example_dictionaries)
+    multilabel_examples = dataset_utils.dictionaries_to_multilabel_examples(
+        example_dictionaries, generate_guids=generate_guids)
+    for example in multilabel_examples:
+        assert type(example) == dataset_utils.InputMultilabelExample
+
+
+@pytest.mark.parametrize("examples", ["multilabel_examples",
+                                      "multilabel_examples_without_labels"])
+def test_sorted_class_labels(
+        examples: List[dataset_utils.InputMultilabelExample],
+        request) -> None:
+    """
+    test that class labels are extracted from a list of examples
+    """
+    examples = request.getfixturevalue(examples)
+    labels = dataset_utils.sorted_class_labels(examples)
+
+    assert type(labels) == list

@@ -2,7 +2,7 @@
 fixtures for unit tests
 """
 
-from typing import List
+from typing import List, Dict
 
 import pytest
 from transformers import AutoTokenizer
@@ -52,3 +52,33 @@ def multilabel_dataset(
         max_length,
         predict=False
     )
+
+
+@pytest.fixture
+def multilabel_example_dictionaries(multilabel_examples) -> List[Dict]:
+    """
+    list of dictionaries containing multilabel examples, e.g.:
+       [{"guid": "0",
+         "text": "Text 0",
+         "labels": ["Label 0", "Label 1"]},
+        {"guid": "1",
+         "text": "Text 1",
+         "labels": ["Label 0"]}]
+    """
+    return [multilabel_example.__dict__
+            for multilabel_example in multilabel_examples]
+
+
+@pytest.fixture
+def multilabel_example_dictionaries_without_labels(
+        multilabel_examples_without_labels) -> List[Dict]:
+    """
+    list of dictionaries containing multilabel examples without labels, e.g.:
+       [{"guid": "0",
+         "text": "Text 0"},
+        {"guid": "1",
+         "text": "Text 1"}]
+    """
+    return [{"guid": multilabel_example.guid,
+             "text": multilabel_example.text}
+            for multilabel_example in multilabel_examples_without_labels]
