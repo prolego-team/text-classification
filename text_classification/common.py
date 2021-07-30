@@ -1,5 +1,5 @@
 """
-shared utility function
+shared utility methods
 """
 
 import pandas as pd
