@@ -82,7 +82,7 @@ def main(**kwargs):
     # read text and create input examples
     data_dirpath = "examples/books/data"
     book_titles = [title.split(".txt")[0] for title in os.listdir(data_dirpath)
-                   if title.endswith(".txt")]
+                   if title.endswith(".txt") and not title.startswith("test")]
     examples = []
     for book_title in book_titles:
         book_txt_filepath = os.path.join(data_dirpath, book_title + ".txt")
