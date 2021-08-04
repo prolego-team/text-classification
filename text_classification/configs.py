@@ -49,18 +49,6 @@ class InferenceConfig():
         self.num_labels = len(self.class_labels)
 
 
-def parse_model_config(model_data: Dict[str, str]) -> ModelConfig:
-    """
-    parse a model config dictionary into a ModelConfig object
-    """
-    return ModelConfig(
-        model_data.get("model_name_or_dirpath"),
-        model_data.get("revision"),
-        model_data.get("saved_model_dirpath"),
-        model_data.get("task_name")
-    )
-
-
 def read_config_for_training(training_config_filepath: str) -> TrainingConfig:
     """
     Create a training config from a json file containing training configurations.
@@ -72,7 +60,7 @@ def read_config_for_training(training_config_filepath: str) -> TrainingConfig:
 
     # create model config
     model_data = data.get("model")
-    model_config = parse_model_config(model_data)
+    model_config = ModelConfig(**model_data)
 
     return TrainingConfig(model_config)
 
@@ -88,7 +76,7 @@ def read_config_for_inference(inference_config_filepath: str) -> InferenceConfig
 
     # create model config
     model_data = data.get("model")
-    model_config = parse_model_config(model_data)
+    model_config = ModelConfig(**model_data)
 
     class_labels = [str(label) for label in data.get("class_labels")]
     max_length = int(data.get("max_length"))
@@ -106,7 +94,7 @@ def save_config_for_inference(
     inference_data = {
         "class_labels": inference_config.class_labels,
         "max_length": inference_config.max_length,
-        "model": inference_config.model_config.__dict__
+        "model": vars(inference_config.model_config)
     }
 
     with open(inference_config_filepath, "w") as f:
