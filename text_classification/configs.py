@@ -3,7 +3,7 @@ configuration classes and utilities for models, training, and inference
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Optional
+from typing import List, Optional
 import json
 
 
