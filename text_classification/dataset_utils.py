@@ -5,7 +5,7 @@ and creating datasets compatible with HuggingFace Trainer.
 
 from dataclasses import dataclass
 from typing import Optional, List, Dict
-import re
+from ast import literal_eval
 
 import numpy as np
 import pandas as pd
@@ -147,22 +147,17 @@ def tsv_to_multilabel_examples(
     if generate_guids:
         dataframe["guid"] = range(dataframe.shape[0])
 
-    # Create a label mapping function. If labels exist in the dataframe,
-    # the mapping function converts a string to list (e.g.,
-    # "['Label 1', 'Label 2']" to ["Label 1", "Label 2"]), Otherwise,
-    # the function just returns None
-    if "labels" in dataframe.columns:
-        label_mapping = lambda labels: re.sub("'|\"", "", str(labels))[1:-1].split(",")
-    else:
-        # create a dummy "labels" column in the dataframe
+    if "labels" not in dataframe.columns:
         dataframe["labels"] = ""
-        label_mapping = lambda labels: None
 
+    # generate a list of examples
+    # if labels exist in the dataframe, literal_eval converts a string to
+    # a list (e.g., "['Label 1', 'Label 2']" to ["Label 1", "Label 2"])
     multilabel_examples = [
         InputMultilabelExample(
             str(row["guid"]),
             str(row["text"]),
-            label_mapping(row["labels"]))
+            None if row["labels"] == "" else literal_eval(row["labels"]))
         for _, row in dataframe.iterrows()
     ]
 
