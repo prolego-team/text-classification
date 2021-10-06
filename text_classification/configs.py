@@ -78,6 +78,8 @@ def read_config_for_training(training_config_filepath: str) -> TrainingConfig:
 def inference_config_from_dict(inference_dict: dict) -> InferenceConfig:
     """
     Create an inference config from a dictionary of inference configurations.
+    See unit_tests/tests_configs.py::test_inference_config_from_dict
+    for an example of the expected input.
     """
 
     # create model config
