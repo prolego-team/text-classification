@@ -133,6 +133,13 @@ class MultilabelPredictor:
             examples: List[dataset_utils.InputMultilabelExample],
             max_length: int,
             threshold: Union[float, List[float]]) -> List[dataset_utils.OutputMultilabelExample]:
+        """
+        run the prediction workflow:
+            1) create prediction-ready dataset
+            2) run inference to generate logits
+            3) convert logits to predictions with class labels
+            4) build list of output multilabel examples
+        """
 
         # create prediction-ready dataset
         test_dataset = self.create_dataset(examples, max_length)
