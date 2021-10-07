@@ -32,7 +32,11 @@ class MultilabelPredictor:
     A MultilabelPredictor is used to run the prediction workflow
     over a set of examples using a trained multilabel classification model.
     """
-    def __init__(self, model_config: configs.ModelConfig, class_list: List[str]) -> None:
+    def __init__(
+            self,
+            model_config: configs.ModelConfig,
+            class_list: List[str],
+            use_fast_tokenizer: bool = model_utils.USE_FAST_TOKENIZER) -> None:
         """
         compute number of labels from class_list and load model and tokenizer
         """
@@ -41,7 +45,8 @@ class MultilabelPredictor:
 
         self.model, self.tokenizer = model_utils.load_pretrained_model_and_tokenizer(
             model_config,
-            self.num_labels
+            self.num_labels,
+            use_fast=use_fast_tokenizer
         )
 
     def create_dataset(
