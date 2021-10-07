@@ -39,13 +39,11 @@ def main(**kwargs):
     inference_config = configs.read_config_for_inference(kwargs["inference_config_filepath"])
 
     # run inference
-    prediction_examples = inference_utils.predict_multilabel_classes(
+    predictor = inference_utils.MultilabelPredictor(
         inference_config.model_config,
-        inference_config.class_labels,
-        inference_config.max_length,
-        examples,
-        thresholds=None
+        inference_config.class_labels
     )
+    prediction_examples = predictor(examples, inference_config.max_length)
 
     # save output to a tsv file
     dataset_utils.multilabel_examples_to_tsv(
