@@ -105,6 +105,12 @@ def test_tsv_to_input_multilabel_examples(
     for example in multilabel_examples:
         assert type(example) == dataset_utils.InputMultilabelExample
 
+        # test that labels are a list of strings
+        if example.labels is not None:
+            assert type(example.labels) == list
+            for label in example.labels:
+                assert type(label) == str
+
 
 @pytest.mark.parametrize("example_dictionaries", ["input_multilabel_example_dictionaries",
                                                   "input_multilabel_example_dictionaries_without_labels"])

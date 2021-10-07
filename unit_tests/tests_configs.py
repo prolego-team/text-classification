@@ -56,3 +56,42 @@ def test_save_config_for_inference() -> None:
 
     # clean up
     shutil.rmtree(tmp_dir)
+
+
+def test_training_config_from_dict() -> None:
+    """
+    test output types returned from training_config_from_dict
+    """
+    training_dict = {
+        "model": {
+            "model_name_or_dirpath": "roberta-base",
+            "revision": "main",
+            "saved_model_dirpath": "trained",
+            "task_name": "multilabel"
+        }
+    }
+
+    training_config = configs.training_config_from_dict(training_dict)
+    assert type(training_config) == configs.TrainingConfig
+    assert type(training_config.model_config) == configs.ModelConfig
+
+
+def test_inference_config_from_dict() -> None:
+    """
+    test output types returned from inference_config_from_dict
+    """
+    inference_dict = {
+        "model": {
+            "model_name_or_dirpath": "roberta-base",
+            "revision": "main",
+            "saved_model_dirpath": "trained",
+            "task_name": "multilabel"
+        },
+        "class_labels": ["Label 0", "Label 1", "Label 2", "Label 3"],
+        "max_length": 128
+    }
+
+    inference_config = configs.inference_config_from_dict(inference_dict)
+    assert type(inference_config) == configs.InferenceConfig
+    assert type(inference_config.model_config) == configs.ModelConfig
+    assert inference_config.num_labels == len(inference_config.class_labels)
