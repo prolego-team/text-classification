@@ -50,7 +50,7 @@ def input_multilabel_examples_without_labels() -> List[InputMultilabelExample]:
 
 @pytest.fixture
 def multilabel_dataset(
-        multilabel_examples: List[InputMultilabelExample],
+        input_multilabel_examples: List[InputMultilabelExample],
         class_labels: List[str]) -> MultilabelDataset:
     """
     dummy multilabel dataset
@@ -58,7 +58,7 @@ def multilabel_dataset(
     tokenizer = AutoTokenizer.from_pretrained("roberta-base")
     max_length = 128
     return MultilabelDataset(
-        multilabel_examples,
+        input_multilabel_examples,
         class_labels,
         tokenizer,
         max_length,
