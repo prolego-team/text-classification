@@ -49,6 +49,20 @@ class InferenceConfig():
         self.num_labels = len(self.class_labels)
 
 
+def training_config_from_dict(training_dict: dict) -> TrainingConfig:
+    """
+    Create a training config from a dictionary of training configurations.
+    See unit_tests/tests_configs.py::test_training_config_from_dict
+    for an example of the expected input.
+    """
+
+    # create model config
+    model_data = training_dict.get("model")
+    model_config = ModelConfig(**model_data)
+
+    return TrainingConfig(model_config)
+
+
 def read_config_for_training(training_config_filepath: str) -> TrainingConfig:
     """
     Create a training config from a json file containing training configurations.
@@ -58,11 +72,24 @@ def read_config_for_training(training_config_filepath: str) -> TrainingConfig:
     with open(training_config_filepath, "r") as f:
         data = json.load(f)
 
+    return training_config_from_dict(data)
+
+
+def inference_config_from_dict(inference_dict: dict) -> InferenceConfig:
+    """
+    Create an inference config from a dictionary of inference configurations.
+    See unit_tests/tests_configs.py::test_inference_config_from_dict
+    for an example of the expected input.
+    """
+
     # create model config
-    model_data = data.get("model")
+    model_data = inference_dict.get("model")
     model_config = ModelConfig(**model_data)
 
-    return TrainingConfig(model_config)
+    class_labels = [str(label) for label in inference_dict.get("class_labels")]
+    max_length = int(inference_dict.get("max_length"))
+
+    return InferenceConfig(model_config, class_labels, max_length)
 
 
 def read_config_for_inference(inference_config_filepath: str) -> InferenceConfig:
@@ -74,14 +101,7 @@ def read_config_for_inference(inference_config_filepath: str) -> InferenceConfig
     with open(inference_config_filepath, "r") as f:
         data = json.load(f)
 
-    # create model config
-    model_data = data.get("model")
-    model_config = ModelConfig(**model_data)
-
-    class_labels = [str(label) for label in data.get("class_labels")]
-    max_length = int(data.get("max_length"))
-
-    return InferenceConfig(model_config, class_labels, max_length)
+    return inference_config_from_dict(data)
 
 
 def save_config_for_inference(
