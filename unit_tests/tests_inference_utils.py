@@ -65,3 +65,4 @@ def test_predict_multilabel_classes(
     for example in examples_with_labels:
         assert example.labels is not None
         assert [lab in class_labels for lab in example.labels]
+        assert len(example.labels) == len(example.logits)
