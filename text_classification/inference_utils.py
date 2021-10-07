@@ -132,7 +132,7 @@ class MultilabelPredictor:
             self,
             examples: List[dataset_utils.InputMultilabelExample],
             max_length: int,
-            threshold: Union[float, List[float]]) -> List[dataset_utils.OutputMultilabelExample]:
+            threshold: Union[float, List[float]] = 0.5) -> List[dataset_utils.OutputMultilabelExample]:
         """
         run the prediction workflow:
             1) create prediction-ready dataset

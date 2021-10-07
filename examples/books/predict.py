@@ -32,7 +32,7 @@ def main(**kwargs):
         sentences = f.readlines()
     examples = []
     for i, sentence in enumerate(sentences):
-        example = dataset_utils.InputMultilabelExample(i, sentence, None)
+        example = dataset_utils.InputMultilabelExample(i, sentence.strip(), None)
         examples.append(example)
 
     # read inference config
