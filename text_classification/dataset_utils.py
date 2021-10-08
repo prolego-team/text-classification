@@ -3,8 +3,8 @@ Utilities for handling data, e.g., reading and parsing examples
 and creating datasets compatible with HuggingFace Trainer.
 """
 
-from dataclasses import dataclass
-from typing import Optional, List, Dict
+from dataclasses import asdict, dataclass
+from typing import Optional, List, Dict, Union
 from ast import literal_eval
 
 import numpy as np
@@ -29,6 +29,20 @@ class InputMultilabelExample:
     labels: Optional[List[str]]
 
 
+@dataclass
+class OutputMultilabelExample(InputMultilabelExample):
+    """
+    An OutputMultilabelExample is returned as a result of inference.
+    It differs from an InputMultilabelExample in two ways:
+       1) the attribute "labels" is not optional, i.e., it cannot be None
+       2) contains an additional attribute, "logits"
+             logits: list of classification scores, one for each label
+    """
+    labels: List[str]
+    logits: List[float]
+
+
+@dataclass
 class MultilabelDataset():
     """
     Custom dataset class for multi-label classification.
@@ -104,30 +118,25 @@ def compute_class_weights(one_hot_labels: List[int]) -> np.array:
 
 
 def multilabel_examples_to_tsv(
-        multilabel_examples: List[InputMultilabelExample],
+        multilabel_examples: Union[List[InputMultilabelExample], List[OutputMultilabelExample]],
         tsv_filepath: str) -> None:
     """
     Write a list of multilabel examples to tsv.
     """
 
     # put examples in a dataframe
-    # InputMultilabelExample.guid, text, labels
-    examples_dicts = [
-        {"guid": str(example.guid),
-         "text": example.text,
-         "labels": example.labels}
-        for example in multilabel_examples]
+    examples_dicts = [asdict(example) for example in multilabel_examples]
 
     examples_df = pd.DataFrame(examples_dicts)
 
     dataframe_to_tsv(examples_df, tsv_filepath)
 
 
-def tsv_to_multilabel_examples(
+def tsv_to_input_multilabel_examples(
         tsv_filepath: str,
         generate_guids: bool = False) -> List[InputMultilabelExample]:
     """
-    Read a tsv file and convert to a list of multilabel examples. If
+    Read a tsv file and convert to a list of input multilabel examples. If
     generate_guids is True, also create a unique (to this dataset) id
     for each example.
 
@@ -164,7 +173,7 @@ def tsv_to_multilabel_examples(
     return multilabel_examples
 
 
-def dictionaries_to_multilabel_examples(
+def dictionaries_to_input_multilabel_examples(
         example_dictionaries: List[Dict],
         generate_guids: bool) -> List[InputMultilabelExample]:
     """
@@ -196,7 +205,8 @@ def dictionaries_to_multilabel_examples(
                 for example_dict in example_dictionaries]
 
 
-def sorted_class_labels(multilabel_examples: List[InputMultilabelExample]) -> List[str]:
+def sorted_class_labels(
+        multilabel_examples: Union[List[InputMultilabelExample], List[OutputMultilabelExample]]) -> List[str]:
     """
     returns a sorted list of class labels from multilabel examples
     """

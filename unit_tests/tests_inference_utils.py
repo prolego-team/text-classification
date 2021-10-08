@@ -5,9 +5,13 @@ unit tests for text_classification/inference_utils.py
 from typing import List
 
 import pytest
+import numpy as np
 
 from text_classification import inference_utils, configs
-from text_classification.dataset_utils import InputMultilabelExample
+from text_classification.dataset_utils import (
+    InputMultilabelExample,
+    MultilabelDataset,
+    OutputMultilabelExample)
 
 
 def test_one_hot_to_index_labels() -> None:
@@ -24,44 +28,72 @@ def test_one_hot_to_index_labels() -> None:
     expected_index_predictions = [
         [0],
         [1, 3],
-        [-1],  # null
+        [],  # null
         [0, 1, 2, 3],
         [3]
     ]
     actual_index_predictions = inference_utils.one_hot_to_index_labels(one_hot_predictions)
-    print(actual_index_predictions)
 
     for actual, expected in zip(actual_index_predictions, expected_index_predictions):
         assert len(actual) == len(expected)
         assert set(actual) == set(expected)
 
 
-@pytest.mark.parametrize("set_custom_thresholds", [True, False])
-@pytest.mark.usefixtures("multilabel_examples_without_labels")
+@pytest.mark.parametrize("threshold_is_list", [True, False])
 @pytest.mark.usefixtures("class_labels")
-def test_predict_multilabel_classes(
-        set_custom_thresholds: bool,
-        multilabel_examples_without_labels: List[InputMultilabelExample],
-        class_labels: List[str]) -> None:
-    """
-    test that prediction yields a list of labeled examples
-    """
+@pytest.mark.usefixtures("input_multilabel_examples_without_labels")
+def test_MultilabelPredictor(
+        threshold_is_list: bool,
+        class_labels: List[str],
+        input_multilabel_examples_without_labels: List[InputMultilabelExample]) -> None:
 
+    # create MultilabelPredictor instance
     inference_config = configs.read_config_for_inference("test_data/inference_config.json")
-    if set_custom_thresholds:
-        thresholds = [0.5] * inference_config.num_labels
-    else:
-        thresholds = None
-    examples_with_labels = inference_utils.predict_multilabel_classes(
-        inference_config.model_config,
-        inference_config.class_labels,
-        inference_config.max_length,
-        multilabel_examples_without_labels,
-        thresholds
-    )
+    predictor = inference_utils.MultilabelPredictor(inference_config.model_config, class_labels)
 
-    assert type(examples_with_labels) == list
-    assert len(examples_with_labels) == len(multilabel_examples_without_labels)
-    for example in examples_with_labels:
-        assert example.labels is not None
+    # test logits_to_predicted_labels
+    threshold = 0.5
+    if threshold_is_list:
+        threshold = [threshold] * len(class_labels)
+    logits = np.array([[0.9, 0.9, 0.0, 0.0],
+                       [0.0, 0.0, 0.0, 0.0],  # null
+                       [0.9, 0.9, 0.9, 0.0],
+                       [0.9, 0.0, 0.0, 0.0]])
+    expected_out_labels = [["Label 0", "Label 1"],
+                           [],  # null
+                           ["Label 0", "Label 1", "Label 2"],
+                           ["Label 0"]]
+    expected_out_logits = [[0.9, 0.9],
+                           [],  # null
+                           [0.9, 0.9, 0.9],
+                           [0.9]]
+    labels, logits = predictor.logits_to_predicted_labels(logits, threshold)
+
+    assert np.all(labels == expected_out_labels)
+    assert np.all(logits == expected_out_logits)
+
+    # test create_dataset
+    test_dataset = predictor.create_dataset(
+        input_multilabel_examples_without_labels, inference_config.max_length)
+    assert type(test_dataset) == MultilabelDataset
+
+    # test predict_proba
+    logits = predictor.predict_proba(test_dataset)
+    assert type(logits) == np.ndarray
+    assert logits.shape[0] == len(test_dataset)
+    assert logits.shape[1] == predictor.num_labels
+
+    # test __call__
+    output_examples = predictor(
+        input_multilabel_examples_without_labels,
+        inference_config.max_length,
+        threshold)
+
+    assert type(output_examples) == list
+    assert len(output_examples) == len(input_multilabel_examples_without_labels)
+    for example in output_examples:
+        assert type(example) == OutputMultilabelExample
+        assert type(example.labels) == list
         assert [lab in class_labels for lab in example.labels]
+        assert type(example.logits) == list
+        assert len(example.labels) == len(example.logits)
