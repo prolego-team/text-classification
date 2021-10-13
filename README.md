@@ -15,7 +15,7 @@ Create a virtual environment and install package dependencies using `pip` (v. 21
         cd text-classification
         python3 -m venv .venv
         source .venv/bin/activate
-        pip install -r requirements.txt
+        pip install -e .
 
 The environment only needs to be set up once. After it has been created, it can be activated using the command:
 
