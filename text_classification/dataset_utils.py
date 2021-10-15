@@ -35,11 +35,11 @@ class OutputMultilabelExample(InputMultilabelExample):
     An OutputMultilabelExample is returned as a result of inference.
     It differs from an InputMultilabelExample in two ways:
        1) the attribute "labels" is not optional, i.e., it cannot be None
-       2) contains an additional attribute, "logits"
-             logits: list of classification scores, one for each label
+       2) contains an additional attribute, "confidences"
+             confidences: list of classification scores, one for each label
     """
     labels: List[str]
-    logits: List[float]
+    confidences: List[float]
 
 
 @dataclass
@@ -69,21 +69,11 @@ class MultilabelDataset():
             # assign all labels to a dummy label (null)
             self.labels = [[0] * self.num_labels for _ in examples]
         else:
-            self.label_to_int = {l: i for i, l in enumerate(class_labels)}
-            self.labels = [self.to_one_hot(example) for example in examples]
+            self.labels = [to_one_hot(example, class_labels) for example in examples]
 
         # store example guids and input text
         self.texts = [example.text for example in examples]
         self.guids = [example.guid for example in examples]
-
-    def to_one_hot(self, example: InputMultilabelExample) -> List[int]:
-        """
-        convert list of string labels to one-hot encoded label
-        """
-        one_hot_vector = [0] * self.num_labels
-        for label in example.labels:
-            one_hot_vector[self.label_to_int[label]] = 1
-        return one_hot_vector
 
     def tokenize(self, examples: List[InputMultilabelExample]) -> BatchEncoding:
         """
@@ -104,6 +94,19 @@ class MultilabelDataset():
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item["labels"] = torch.tensor(self.labels[idx])
         return item
+
+
+def to_one_hot(
+        example: Union[InputMultilabelExample, OutputMultilabelExample],
+        class_labels: List[str]) -> List[int]:
+    """
+    convert list of string labels for an example to one-hot encoded label
+    """
+    one_hot_vector = [0] * len(class_labels)
+    label_to_int = {l: i for i, l in enumerate(class_labels)}
+    for label in example.labels:
+        one_hot_vector[label_to_int[label]] = 1
+    return one_hot_vector
 
 
 def compute_class_weights(one_hot_labels: List[int]) -> np.array:
