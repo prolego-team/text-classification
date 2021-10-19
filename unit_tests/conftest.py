@@ -28,9 +28,9 @@ def class_labels(num_labels: int) -> List[str]:
 @pytest.fixture
 def output_multilabel_examples(class_labels: List[str]) -> List[OutputMultilabelExample]:
     """list of 10 output multi-label examples, each labeled with all class labels
-       with logits 0.9"""
-    logits = [0.9] * len(class_labels)
-    return [OutputMultilabelExample(str(i), "Text " + str(i), class_labels, logits)
+       with confidences 0.9"""
+    confidences = [0.9] * len(class_labels)
+    return [OutputMultilabelExample(str(i), "Text " + str(i), class_labels, confidences)
             for i in range(10)]
 
 

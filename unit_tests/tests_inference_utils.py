@@ -51,26 +51,26 @@ def test_MultilabelPredictor(
     inference_config = configs.read_config_for_inference("test_data/inference_config.json")
     predictor = inference_utils.MultilabelPredictor(inference_config.model_config, class_labels)
 
-    # test logits_to_predicted_labels
+    # test confidences_to_predicted_labels
     threshold = 0.5
     if threshold_is_list:
         threshold = [threshold] * len(class_labels)
-    logits = np.array([[0.9, 0.9, 0.0, 0.0],
-                       [0.0, 0.0, 0.0, 0.0],  # null
-                       [0.9, 0.9, 0.9, 0.0],
-                       [0.9, 0.0, 0.0, 0.0]])
+    confidences = np.array([[0.9, 0.9, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],  # null
+                            [0.9, 0.9, 0.9, 0.0],
+                            [0.9, 0.0, 0.0, 0.0]])
     expected_out_labels = [["Label 0", "Label 1"],
                            [],  # null
                            ["Label 0", "Label 1", "Label 2"],
                            ["Label 0"]]
-    expected_out_logits = [[0.9, 0.9],
-                           [],  # null
-                           [0.9, 0.9, 0.9],
-                           [0.9]]
-    labels, logits = predictor.logits_to_predicted_labels(logits, threshold)
+    expected_out_confidences = [[0.9, 0.9],
+                                [],  # null
+                                [0.9, 0.9, 0.9],
+                                [0.9]]
+    labels, confidences = predictor.confidences_to_predicted_labels(confidences, threshold)
 
     assert np.all(labels == expected_out_labels)
-    assert np.all(logits == expected_out_logits)
+    assert np.all(confidences == expected_out_confidences)
 
     # test create_dataset
     test_dataset = predictor.create_dataset(
@@ -78,10 +78,10 @@ def test_MultilabelPredictor(
     assert type(test_dataset) == MultilabelDataset
 
     # test predict_proba
-    logits = predictor.predict_proba(test_dataset)
-    assert type(logits) == np.ndarray
-    assert logits.shape[0] == len(test_dataset)
-    assert logits.shape[1] == predictor.num_labels
+    confidences = predictor.predict_proba(test_dataset)
+    assert type(confidences) == np.ndarray
+    assert confidences.shape[0] == len(test_dataset)
+    assert confidences.shape[1] == predictor.num_labels
 
     # test __call__
     output_examples = predictor(
@@ -95,5 +95,5 @@ def test_MultilabelPredictor(
         assert type(example) == OutputMultilabelExample
         assert type(example.labels) == list
         assert [lab in class_labels for lab in example.labels]
-        assert type(example.logits) == list
-        assert len(example.labels) == len(example.logits)
+        assert type(example.confidences) == list
+        assert len(example.labels) == len(example.confidences)
