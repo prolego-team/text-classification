@@ -81,7 +81,7 @@ class MultilabelTrainer(Trainer):
         if self.class_weights is not None:
             class_weights = torch.FloatTensor(self.class_weights)
             if torch.cuda.is_available():
-                class_weights.to("cuda")
+                class_weights = class_weights.to("cuda")
             loss_function = torch.nn.BCEWithLogitsLoss(
                 pos_weight=class_weights
             )
