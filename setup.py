@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 VERSION = "0.1"
 
 setup(
-    name="textclassification",
+    name="text_classification",
     version=VERSION,
     author="Prolego",
     packages=find_packages(
