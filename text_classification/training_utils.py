@@ -56,6 +56,7 @@ def train_multilabel_classifier(
     # build training args
     do_eval = (do_eval) and (eval_dataset is not None)  # if eval_dataset is None, set do_eval to False
     training_arguments["do_eval"] = do_eval  # do evaluation every logging_steps steps
+    training_arguments["report_to"] = "none"
     parser = HfArgumentParser(TrainingArguments)
     training_args = parser.parse_dict(training_arguments)[0]
 
