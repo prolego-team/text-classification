@@ -13,7 +13,7 @@ from transformers import (
     Trainer
 )
 
-from text_classification import configs
+from . import configs
 
 
 USE_FAST_TOKENIZER = False

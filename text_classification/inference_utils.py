@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from transformers.training_args import TrainingArguments
 
-from text_classification import configs, dataset_utils, model_utils
+from . import configs, dataset_utils, model_utils
 
 
 def one_hot_to_index_labels(one_hot_predictions: List[List[int]]) -> List[List[int]]:

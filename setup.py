@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.1"
+VERSION = "0.2"
 
 setup(
     name="text-classification",
@@ -11,7 +11,7 @@ setup(
     ),
     description="Use transformers to classify text.",
     long_description=open('README.md').read(),
-    python_requires=">=3.9",
+    python_requires=">=3.7",
     install_requires=[
         "click>=8.0.1",
         "numpy>=1.21.1",
@@ -19,6 +19,6 @@ setup(
         "pytest>=6.2.4",
         "scikit-learn>=0.24.2",
         "torch>=1.9.0",
-        "transformers==4.9.1"
+        "transformers>=4.9.1"
     ]
 )

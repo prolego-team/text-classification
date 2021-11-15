@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 from transformers import PreTrainedTokenizer, BatchEncoding
 
-from text_classification.common import dataframe_to_tsv, tsv_to_dataframe
+from .common import dataframe_to_tsv, tsv_to_dataframe
 
 
 @dataclass

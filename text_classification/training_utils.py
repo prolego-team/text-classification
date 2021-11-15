@@ -14,7 +14,7 @@ from transformers import (
     set_seed
 )
 
-from text_classification import configs, dataset_utils, model_utils
+from . import configs, dataset_utils, model_utils
 
 
 def compute_multilabel_accuracy(

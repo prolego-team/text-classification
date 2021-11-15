@@ -7,7 +7,7 @@ from typing import List, Dict, Tuple
 import numpy as np
 from sklearn.metrics import multilabel_confusion_matrix as sklearn_multilabel_confusion_matrix
 
-from text_classification import dataset_utils
+from . import dataset_utils
 
 
 def multilabel_confusion_matrix(
