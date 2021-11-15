@@ -78,6 +78,7 @@ class MultilabelPredictor:
         temp_dir = mkdtemp()
         training_args = TrainingArguments(
             output_dir=temp_dir,
+            report_to="none",
             do_train=False,
             do_eval=False,
             do_predict=True
