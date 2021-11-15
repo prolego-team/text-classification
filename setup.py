@@ -19,6 +19,6 @@ setup(
         "pytest>=6.2.4",
         "scikit-learn>=0.24.2",
         "torch>=1.9.0",
-        "transformers==4.9.1"
+        "transformers>=4.9.1"
     ]
 )
