@@ -58,6 +58,31 @@ def test_save_config_for_inference() -> None:
     shutil.rmtree(tmp_dir)
 
 
+def test_save_config_for_training() -> None:
+    """
+    test that an output file is created by save_config_for_training
+    """
+
+    training_config = configs.read_config_for_training("test_data/training_config.json")
+
+    tmp_dir = mkdtemp()
+    out_filepath = os.path.join(tmp_dir, "training_config.json")
+
+    configs.save_config_for_training(training_config, out_filepath)
+
+    assert os.path.exists(out_filepath)
+
+    # check that the created training config contains identical content
+    # as the original
+    new_training_config = configs.read_config_for_training(out_filepath)
+    for attribute in training_config.model_config.__dict__:
+        assert getattr(new_training_config.model_config, attribute) == \
+            getattr(training_config.model_config, attribute)
+
+    # clean up
+    shutil.rmtree(tmp_dir)
+
+
 def test_training_config_from_dict() -> None:
     """
     test output types returned from training_config_from_dict

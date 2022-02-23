@@ -119,3 +119,16 @@ def save_config_for_inference(
 
     with open(inference_config_filepath, "w") as f:
         json.dump(inference_data, f, indent=4, sort_keys=True)
+
+
+def save_config_for_training(
+    training_config: TrainingConfig,
+    training_config_filepath: str) -> None:
+    """
+    write training_config to file
+    """
+    training_data = {
+        "model": vars(training_config.model_config)
+    }
+    with open(training_config_filepath, "w") as f:
+        json.dump(training_data, f, indent=4, sort_keys=True)
