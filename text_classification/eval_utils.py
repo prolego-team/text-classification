@@ -60,7 +60,13 @@ def multilabel_precision_recall(
                 # false positive
                 fp_count += 1
 
-    precision = tp_count / (tp_count + fp_count)
-    recall = tp_count / (tp_count + fn_count)
+    if tp_count + fp_count == 0:
+        precision = np.nan
+    else:
+        precision = tp_count / (tp_count + fp_count)
+    if tp_count + fn_count == 0:
+        recall = np.nan
+    else:
+        recall = tp_count / (tp_count + fn_count)
 
     return precision, recall
