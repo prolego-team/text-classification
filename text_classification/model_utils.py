@@ -6,6 +6,8 @@ from typing import Tuple, Optional, List
 from copy import deepcopy
 
 import torch
+from torch.nn import Module, functional
+from torch.autograd import Variable
 from transformers import (
     AutoConfig,
     AutoModelForSequenceClassification,
@@ -16,6 +18,7 @@ from transformers import (
 from . import configs
 
 
+USE_FOCAL_LOSS = False
 USE_FAST_TOKENIZER = False
 
 
@@ -49,6 +52,27 @@ def load_pretrained_model_and_tokenizer(
     )
 
     return model, tokenizer
+
+
+class FocalLoss(Module):
+    """
+    from: https://github.com/clcarwin/focal_loss_pytorch/blob/master/focalloss.py
+    """
+    def __init__(self, gamma: float = 0):
+        super().__init__()
+        self.gamma = gamma
+
+    def forward(self, input, target):
+        target = target.view(-1, 1)
+
+        logpt = functional.log_softmax(input)
+        logpt = logpt.gather(1, target)
+        logpt = logpt.view(-1)
+        pt = Variable(logpt.data.exp())
+
+        loss = -1 * (1 - pt) ** self.gamma * logpt
+
+        return loss.mean()
 
 
 class MultilabelTrainer(Trainer):
@@ -85,6 +109,8 @@ class MultilabelTrainer(Trainer):
             loss_function = torch.nn.BCEWithLogitsLoss(
                 pos_weight=class_weights
             )
+        elif USE_FOCAL_LOSS:
+            loss_function = FocalLoss(gamma=0)
         else:
             loss_function = torch.nn.BCEWithLogitsLoss()
 
