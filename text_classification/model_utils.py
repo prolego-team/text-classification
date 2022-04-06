@@ -63,13 +63,8 @@ class FocalLoss(Module):
         self.gamma = gamma
 
     def forward(self, input, target):
-        # target is tensor of 0s and 1s
-        target = torch.tensor(target[:, 1], dtype=torch.int64)
-        target = target.view(-1, 1)
-
-        logpt = functional.log_softmax(input)
-        logpt = logpt.gather(1, target)
-        logpt = logpt.view(-1)
+        logpt = functional.logsigmoid(input)
+        logpt = logpt[target == 1]
         pt = Variable(logpt.data.exp())
 
         loss = -1 * (1 - pt) ** self.gamma * logpt
