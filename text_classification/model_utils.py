@@ -109,16 +109,6 @@ class MultilabelTrainer(Trainer):
         # init Trainer
         super().__init__(*args, **kwargs)
 
-    def set_class_weights(self, class_weights: Optional[List[float]]):
-        """
-        add class weights
-        Note: This needs to be run before model training. If class weights
-        are not required, pass None as the input.
-        """
-        # TODO: There's probably a cleaner way to do this, e.g., modifying the __init__
-        # to take class_weights as an optional input.
-        self.class_weights = class_weights
-
     def compute_loss(self, model, inputs, return_outputs=False):
         """
         override default loss function with binary cross-entropy loss
