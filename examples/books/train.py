@@ -60,6 +60,8 @@ def split_txt_file(txt_filepath: str) -> List[str]:
               help="Path to save the inference config file created after training.")
 @click.option("--do_class_weights", "-cw", is_flag=True,
               help="Weight the loss by relative class frequency to account for class imbalance.")
+@click.option("--do_focal_loss", "-fl", is_flag=True)
+@click.option("--focal_loss_gamma", "-g", default=0.5)
 def main(**kwargs):
     """
     Train a transformers model to classify sentences based on originating novel.
@@ -123,7 +125,9 @@ def main(**kwargs):
         num_labels,
         TRAINING_ARGUMENTS,
         do_eval=True,
-        do_class_weights=kwargs["do_class_weights"]
+        do_class_weights=kwargs["do_class_weights"],
+        do_focal_loss=kwargs["do_focal_loss"],
+        focal_loss_gamma=kwargs["focal_loss_gamma"]
     )
 
     # create and save inference config
