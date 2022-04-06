@@ -38,7 +38,9 @@ def train_multilabel_classifier(
         training_arguments: dict,
         use_fast: bool = model_utils.USE_FAST_TOKENIZER,
         do_eval: bool = True,
-        do_class_weights: bool = False) -> None:
+        do_class_weights: bool = False,
+        do_focal_loss: bool = False,
+        focal_loss_gamma: Optional[float] = None) -> None:
     """
     training loop for multi-label classification
     Notes:
@@ -73,7 +75,10 @@ def train_multilabel_classifier(
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        compute_metrics=compute_multilabel_accuracy
+        compute_metrics=compute_multilabel_accuracy,
+        class_weights=class_weights,
+        focal_loss_gamma=focal_loss_gamma,
+        do_focal_loss=do_focal_loss
     )
     trainer.set_class_weights(class_weights)
 

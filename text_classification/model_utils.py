@@ -78,6 +78,37 @@ class MultilabelTrainer(Trainer):
     function with binary cross-entropy loss.
     Also includes support for weighted loss to address class imbalance.
     """
+    def __init__(self, *args, **kwargs):
+        self.class_weights = None
+        self.focal_loss_gamma = 0.5
+        self.loss_function = torch.nn.BCEWithLogitsLoss()
+
+        # override defaults if provided, and remove from kwargs
+
+        if "class_weights" in kwargs:
+            if kwargs["class_weights"] is not None:
+                # modify loss function to use class weights
+                self.class_weights = torch.FloatTensor(kwargs["class_weights"])
+                if torch.cuda.is_available():
+                    self.class_weights = self.class_weights.to("cuda")
+                self.loss_function = torch.nn.BCEWithLogitsLoss(
+                    pos_weight=self.class_weights
+                )
+            kwargs.pop("class_weights")
+
+        if "focal_loss_gamma" in kwargs:
+            if kwargs["focal_loss_gamma"] is not None:
+                self.focal_loss_gamma = kwargs["focal_loss_gamma"]
+            kwargs.pop("focal_loss_gamma")
+
+        if "do_focal_loss" in kwargs:
+            if kwargs["do_focal_loss"]:
+                self.loss_function = FocalLoss(gamma=self.focal_loss_gamma)
+            kwargs.pop("do_focal_loss")
+
+        # init Trainer
+        super().__init__(*args, **kwargs)
+
     def set_class_weights(self, class_weights: Optional[List[float]]):
         """
         add class weights
@@ -99,20 +130,8 @@ class MultilabelTrainer(Trainer):
         labels = inputs_copy.pop("labels")
         outputs = model(**inputs_copy)
         logits = outputs.logits
-        if self.class_weights is not None:
-            class_weights = torch.FloatTensor(self.class_weights)
-            if torch.cuda.is_available():
-                class_weights = class_weights.to("cuda")
-            loss_function = torch.nn.BCEWithLogitsLoss(
-                pos_weight=class_weights
-            )
-        elif USE_FOCAL_LOSS:
-            loss_function = FocalLoss(gamma=0)
-        else:
-            loss_function = torch.nn.BCEWithLogitsLoss()
-
-        loss = loss_function(logits.view(-1, self.model.config.num_labels),
-                             labels.float().view(-1, self.model.config.num_labels))
+        loss = self.loss_function(logits.view(-1, self.model.config.num_labels),
+                                  labels.float().view(-1, self.model.config.num_labels))
 
         if return_outputs:
             return (loss, outputs)
