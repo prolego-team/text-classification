@@ -36,11 +36,13 @@ def test_compute_multilabel_accuracy() -> None:
 @pytest.mark.usefixtures("num_labels")
 @pytest.mark.parametrize("do_eval", [True, False])
 @pytest.mark.parametrize("do_class_weights", [True, False])
+@pytest.mark.parametrize("do_focal_loss", [True, False])
 def test_train_multilabel_classifier(
         multilabel_dataset: dataset_utils.MultilabelDataset,
         num_labels: int,
         do_eval: bool,
-        do_class_weights: bool) -> None:
+        do_class_weights: bool,
+        do_focal_loss: bool) -> None:
     """
     test that model is trained and saved
     """
@@ -70,7 +72,9 @@ def test_train_multilabel_classifier(
         training_arguments,
         use_fast=model_utils.USE_FAST_TOKENIZER,
         do_eval=do_eval,
-        do_class_weights=do_class_weights
+        do_class_weights=do_class_weights,
+        do_focal_loss=do_focal_loss,
+        focal_loss_gamma=1.0 if do_focal_loss else None
     )
 
     # check that model was written to output dir

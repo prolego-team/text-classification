@@ -87,7 +87,6 @@ class MultilabelPredictor:
             model=self.model,
             args=training_args
         )
-        trainer.set_class_weights(None)
 
         # make predictions
         predictions = trainer.predict(test_dataset=test_dataset).predictions
