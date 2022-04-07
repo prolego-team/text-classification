@@ -55,7 +55,10 @@ def load_pretrained_model_and_tokenizer(
 
 class FocalLoss(Module):
     """
-    https://arxiv.org/pdf/1708.02002.pdf
+    Focal loss places greater emphasis on mis-classified examples.
+    It may be beneficial in cases where class imbalance exists and
+    hard-to-classify examples are primarily found in the minory class.
+    Original citation: https://arxiv.org/pdf/1708.02002.pdf
     """
     def __init__(self, gamma: float = 0):
         """
@@ -93,28 +96,25 @@ class MultilabelTrainer(Trainer):
         self.focal_loss_gamma = 0.5
         self.loss_function = torch.nn.BCEWithLogitsLoss()
 
-        # override defaults if provided, and remove from kwargs
+        # override defaults if provided
+        if kwargs.get("class_weights") is not None:
+            # modify loss function to use class weights
+            self.class_weights = torch.FloatTensor(kwargs["class_weights"])
+            if torch.cuda.is_available():
+                self.class_weights = self.class_weights.to("cuda")
+            self.loss_function = torch.nn.BCEWithLogitsLoss(
+                pos_weight=self.class_weights
+            )
+        if kwargs.get("do_focal_loss"):
+            # use focal loss to place greater weight on misclassified examples
+            self.loss_function = FocalLoss(gamma=self.focal_loss_gamma)
+        if kwargs.get("focal_loss_gamma"):
+            # set focal loss gamma (only used if "do_focal_loss" is True)
+            self.focal_loss_gamma = kwargs["focal_loss_gamma"]
 
-        if "class_weights" in kwargs:
-            if kwargs["class_weights"] is not None:
-                # modify loss function to use class weights
-                self.class_weights = torch.FloatTensor(kwargs["class_weights"])
-                if torch.cuda.is_available():
-                    self.class_weights = self.class_weights.to("cuda")
-                self.loss_function = torch.nn.BCEWithLogitsLoss(
-                    pos_weight=self.class_weights
-                )
-            kwargs.pop("class_weights")
-
-        if "focal_loss_gamma" in kwargs:
-            if kwargs["focal_loss_gamma"] is not None:
-                self.focal_loss_gamma = kwargs["focal_loss_gamma"]
-            kwargs.pop("focal_loss_gamma")
-
-        if "do_focal_loss" in kwargs:
-            if kwargs["do_focal_loss"]:
-                self.loss_function = FocalLoss(gamma=self.focal_loss_gamma)
-            kwargs.pop("do_focal_loss")
+        # reconstruct kwargs without custom fields
+        custom_key_names = ["class_weights", "do_focal_loss", "focal_loss_gamma"]
+        kwargs = {k: v for k, v in kwargs.items() if k not in custom_key_names}
 
         # init Trainer
         super().__init__(*args, **kwargs)

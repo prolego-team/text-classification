@@ -73,7 +73,8 @@ def test_train_multilabel_classifier(
         use_fast=model_utils.USE_FAST_TOKENIZER,
         do_eval=do_eval,
         do_class_weights=do_class_weights,
-        do_focal_loss=do_focal_loss
+        do_focal_loss=do_focal_loss,
+        focal_loss_gamma=1.0 if do_focal_loss else None
     )
 
     # check that model was written to output dir
