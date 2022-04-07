@@ -80,7 +80,6 @@ def train_multilabel_classifier(
         focal_loss_gamma=focal_loss_gamma,
         do_focal_loss=do_focal_loss
     )
-    trainer.set_class_weights(class_weights)
 
     # train and save model and tokenizer
     trainer.train()
