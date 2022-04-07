@@ -18,7 +18,6 @@ from transformers import (
 from . import configs
 
 
-USE_FOCAL_LOSS = False
 USE_FAST_TOKENIZER = False
 
 
