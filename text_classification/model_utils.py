@@ -105,12 +105,12 @@ class MultilabelTrainer(Trainer):
             self.loss_function = torch.nn.BCEWithLogitsLoss(
                 pos_weight=self.class_weights
             )
-        if kwargs.get("do_focal_loss"):
-            # use focal loss to place greater weight on misclassified examples
-            self.loss_function = FocalLoss(gamma=self.focal_loss_gamma)
         if kwargs.get("focal_loss_gamma"):
             # set focal loss gamma (only used if "do_focal_loss" is True)
             self.focal_loss_gamma = kwargs["focal_loss_gamma"]
+        if kwargs.get("do_focal_loss"):
+            # use focal loss to place greater weight on misclassified examples
+            self.loss_function = FocalLoss(gamma=self.focal_loss_gamma)
 
         # reconstruct kwargs without custom fields
         custom_key_names = ["class_weights", "do_focal_loss", "focal_loss_gamma"]
