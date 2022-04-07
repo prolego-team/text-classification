@@ -2,12 +2,11 @@
 Utilities for training models
 """
 
-from typing import Tuple, Optional, List
+from typing import Tuple
 from copy import deepcopy
 
 import torch
 from torch.nn import Module, functional
-from torch.autograd import Variable
 from transformers import (
     AutoConfig,
     AutoModelForSequenceClassification,
