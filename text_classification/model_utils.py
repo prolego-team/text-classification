@@ -56,18 +56,29 @@ def load_pretrained_model_and_tokenizer(
 
 class FocalLoss(Module):
     """
-    from: https://github.com/clcarwin/focal_loss_pytorch/blob/master/focalloss.py
+    https://arxiv.org/pdf/1708.02002.pdf
     """
     def __init__(self, gamma: float = 0):
+        """
+        From  the focal loss paper:
+           gamma > 0 reduces the relative loss for well-classified examples,
+              putting more focus on hard, misclassified examples.
+        When gamma = 0, this is just binary cross entropy loss.
+        """
         super().__init__()
         self.gamma = gamma
 
     def forward(self, input, target):
-        logpt = functional.logsigmoid(input)
-        logpt = logpt[target == 1]
-        pt = Variable(logpt.data.exp())
-
-        loss = -1 * (1 - pt) ** self.gamma * logpt
+        """
+        cross entropy loss:
+          CE = -1 * log(pt)
+            ---> pt = e^(-1 * CE)
+        focal loss = -1 * (1 - pt) ** gamma * log(pt)
+                   = CE * (1 - pt) ** gamma
+        """
+        CE = functional.binary_cross_entropy_with_logits(input, target, reduction="none")
+        pt = torch.exp(-1 * CE)
+        loss = CE * (1 - pt) ** self.gamma
 
         return loss.mean()
 
