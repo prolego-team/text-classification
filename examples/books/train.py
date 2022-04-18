@@ -10,7 +10,6 @@ import re
 from typing import List
 
 import click
-from numpy import append
 from sklearn.model_selection import train_test_split
 
 from text_classification import (
