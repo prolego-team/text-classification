@@ -10,6 +10,7 @@ import re
 from typing import List
 
 import click
+from numpy import append
 from sklearn.model_selection import train_test_split
 
 from text_classification import (
@@ -56,6 +57,8 @@ def split_txt_file(txt_filepath: str) -> List[str]:
 
 @click.command()
 @click.argument("training_config_filepath", type=click.Path(exists=True))
+@click.option("--append_eval_results", is_flag=True, default=False, 
+              help="Append results in existing file or overwite existing file (default)")
 @click.option("--inference_config_filepath", "-icf", default="inference_config.json",
               help="Path to save the inference config file created after training.")
 @click.option("--do_class_weights", "-cw", is_flag=True,
@@ -122,6 +125,8 @@ def main(**kwargs):
         training_config.model_config,
         num_labels,
         TRAINING_ARGUMENTS,
+        book_titles,
+        append_eval_results=kwargs["append_eval_results"],
         do_eval=True,
         do_class_weights=kwargs["do_class_weights"]
     )
