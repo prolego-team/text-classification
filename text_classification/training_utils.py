@@ -110,18 +110,15 @@ def train_multilabel_classifier(
     if do_eval:
         eval_results = trainer.evaluate()
         eval_filepath = os.path.join(training_args.output_dir, "eval_results.txt")
-        if append_eval_results:
-            with open(eval_filepath, "a") as f:
-                # default to "w", use "a" when appending results
-                timestamp = datetime.timestamp(datetime.now())
-                timestamp_string = "Timestamp: " + str(datetime.fromtimestamp(timestamp))
-                f.write("%s\n" % (timestamp_string))
-                for k, v in sorted(eval_results.items()):
-                    f.write("%s = %s\n" % (k, str(v)))
-        else:
-            with open(eval_filepath, "w") as f:
-                for k, v in sorted(eval_results.items()):
-                    f.write("%s = %s\n" % (k, str(v)))
+
+        # default to "w", use "a" when appending results
+        append_flag = "a" if append_eval_results else "w"
+        with open(eval_filepath, append_flag) as f:
+            timestamp = datetime.timestamp(datetime.now())
+            timestamp_string = "Timestamp: " + str(datetime.fromtimestamp(timestamp))
+            f.write("%s\n" % (timestamp_string))
+            for k, v in sorted(eval_results.items()):
+                f.write("%s = %s\n" % (k, str(v)))
 
     # release GPU memory
     torch.cuda.empty_cache()
