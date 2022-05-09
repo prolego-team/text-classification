@@ -36,12 +36,14 @@ class MultilabelPredictor:
             self,
             model_config: configs.ModelConfig,
             class_list: List[str],
-            use_fast_tokenizer: bool = model_utils.USE_FAST_TOKENIZER) -> None:
+            use_fast_tokenizer: bool = model_utils.USE_FAST_TOKENIZER,
+            dataloader_pin_memory: bool = True) -> None:
         """
         compute number of labels from class_list and load model and tokenizer
         """
         self.class_list = class_list
         self.num_labels = len(self.class_list)
+        self.dataloader_pin_memory = dataloader_pin_memory
 
         self.model, self.tokenizer = model_utils.load_pretrained_model_and_tokenizer(
             model_config,
@@ -81,7 +83,8 @@ class MultilabelPredictor:
             report_to="none",
             do_train=False,
             do_eval=False,
-            do_predict=True
+            do_predict=True,
+            dataloader_pin_memory=self.dataloader_pin_memory
         )
         trainer = model_utils.MultilabelTrainer(
             model=self.model,
@@ -91,7 +94,10 @@ class MultilabelPredictor:
 
         # make predictions
         predictions = trainer.predict(test_dataset=test_dataset).predictions
-        confidences = torch.sigmoid(torch.tensor(predictions)).numpy()
+        confidences = torch.sigmoid(torch.tensor(predictions))
+        if not self.dataloader_pin_memory:
+            confidences = confidences.cpu()
+        confidences = confidences.numpy()
 
         # clean up
         shutil.rmtree(temp_dir)
