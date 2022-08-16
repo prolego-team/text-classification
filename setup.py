@@ -11,7 +11,7 @@ setup(
     ),
     description="Use transformers to classify text.",
     long_description=open('README.md').read(),
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     install_requires=[
         "click>=8.0.1",
         "numpy>=1.21.1",
