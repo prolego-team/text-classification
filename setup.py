@@ -14,8 +14,8 @@ setup(
     python_requires=">=3.6",
     install_requires=[
         "click>=8.0.1",
-        "numpy>=1.21.1",
-        "pandas>=1.3.1",
+        "numpy>=1.19.5",
+        "pandas>=1.1.5",
         "pytest>=6.2.4",
         "scikit-learn>=0.24.2",
         "torch>=1.9.0",
