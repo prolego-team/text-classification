@@ -105,7 +105,7 @@ def to_one_hot(
     one_hot_vector = [0] * len(class_labels)
     label_to_int = {l: i for i, l in enumerate(class_labels)}
     for label in example.labels:
-        one_hot_vector[label_to_int[label]] = 1
+        one_hot_vector[label_to_int.get(label, 0)] = 1
     return one_hot_vector
 
 
