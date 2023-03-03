@@ -7,7 +7,6 @@ from typing import List
 
 import numpy as np
 import pytest
-from sklearn.base import _pprint
 
 from text_classification import dataset_utils, eval_utils
 
