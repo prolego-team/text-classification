@@ -13,22 +13,34 @@ from transformers import EvalPrediction
 from text_classification import configs, training_utils, dataset_utils, model_utils
 
 
-def test_compute_multilabel_accuracy() -> None:
+def test_compute_metrics() -> None:
     """
-    test the compute_multilabel_accuracy computes the
-    expected accuracy results
+    test compute_metrics computes f1, precision and recall for each label
+    and full label accuracy and hamming loss
     """
-    label_ids = np.array([[0, 0, 1, 1],
-                          [0, 0, 1, 0],
-                          [1, 0, 0, 0]])
-    predictions = np.zeros(label_ids.shape)
-    expected_accuracy = 8 / 12
+    class_labels = ["alice-in-wonderland", "frankenstein"]
+    label_ids = np.array([
+        [0, 1],
+        [1, 0],
+        [1, 1],
+        [0, 0]
+    ])
+    predictions = np.array([
+        [1, 1],
+        [0, 1],
+        [1, 0],
+        [0, 1]
+    ])
 
     eval_prediction = EvalPrediction(predictions, label_ids)
-    accuracy = training_utils.compute_multilabel_accuracy(eval_prediction)
-
-    assert type(accuracy) == dict
-    assert accuracy['accuracy'] == pytest.approx(expected_accuracy)
+    compute_metrics = training_utils.build_compute_metrics(class_labels)
+    all_metrics = compute_metrics(eval_prediction)
+    assert all_metrics["full_label_accuracy"] == 0 / 8
+    assert all_metrics["hamming_loss"] == 5 / 8
+    assert all_metrics["alice-in-wonderland_precision"] == 1 / 2
+    assert all_metrics["frankenstein_precision"] == 1 / 3
+    assert all_metrics["alice-in-wonderland_recall"] == 1 / 2
+    assert all_metrics["frankenstein_recall"] == 1 / 2
 
 
 # @pytest.mark.skip(reason="long running unit test")
@@ -62,6 +74,8 @@ def test_train_multilabel_classifier(
         "output_dir": tmp_dir
     }
 
+    class_labels = ["alice-in-wonderland", "frankenstein"]
+
     # run training
     eval_dataset = multilabel_dataset if do_eval else None
     training_utils.train_multilabel_classifier(
@@ -70,6 +84,8 @@ def test_train_multilabel_classifier(
         model_config,
         num_labels,
         training_arguments,
+        class_labels,
+        append_eval_results=False,
         use_fast=model_utils.USE_FAST_TOKENIZER,
         do_eval=do_eval,
         do_class_weights=do_class_weights,
