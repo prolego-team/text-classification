@@ -70,7 +70,6 @@ def test_train_multilabel_classifier(
         "per_device_train_batch_size": 8,
         "per_device_eval_batch_size": 16,
         "do_predict": False,
-        "block_size": 128,
         "output_dir": tmp_dir
     }
 
