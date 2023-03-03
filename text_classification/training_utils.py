@@ -45,7 +45,7 @@ def build_compute_metrics(class_labels):
         per_label_metrics["full_label_accuracy"] = accuracy
         per_label_metrics["hamming_loss"] = hamming_loss_metric
         return per_label_metrics
-    
+
     return compute_metrics
 
 
@@ -59,7 +59,9 @@ def train_multilabel_classifier(
         append_eval_results: bool,
         use_fast: bool = model_utils.USE_FAST_TOKENIZER,
         do_eval: bool = True,
-        do_class_weights: bool = False) -> None:
+        do_class_weights: bool = False,
+        do_focal_loss: bool = False,
+        focal_loss_gamma: Optional[float] = None) -> None:
     """
     training loop for multi-label classification
     Notes:
@@ -97,9 +99,11 @@ def train_multilabel_classifier(
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        compute_metrics=compute_metrics
+        compute_metrics=compute_metrics,
+        class_weights=class_weights,
+        focal_loss_gamma=focal_loss_gamma,
+        do_focal_loss=do_focal_loss
     )
-    trainer.set_class_weights(class_weights)
 
     # train and save model and tokenizer
     trainer.train()

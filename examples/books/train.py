@@ -33,11 +33,13 @@ TRAINING_ARGUMENTS = {
     "per_device_train_batch_size": 8,
     "per_device_eval_batch_size": 16,
     "do_predict": False,
-    "block_size": 128,
     "seed": RANDOM_SEED,
     "gradient_accumulation_steps": 1,
     "save_strategy": "no",  # to save intermediate model checkpoints duing training, change to "steps" or "epochs",
     "weight_decay": 0  # make non-zero (e.g., 0.02) to apply regularization in AdamW optimizer
+}
+DATASET_ARGUMENTS = {
+    "block_size": 128,
 }
 
 
@@ -56,12 +58,14 @@ def split_txt_file(txt_filepath: str) -> List[str]:
 
 @click.command()
 @click.argument("training_config_filepath", type=click.Path(exists=True))
-@click.option("--append_eval_results", is_flag=True, default=False, 
+@click.option("--append_eval_results", is_flag=True, default=False,
               help="Append results in existing file or overwite existing file (default)")
 @click.option("--inference_config_filepath", "-icf", default="inference_config.json",
               help="Path to save the inference config file created after training.")
 @click.option("--do_class_weights", "-cw", is_flag=True,
               help="Weight the loss by relative class frequency to account for class imbalance.")
+@click.option("--do_focal_loss", "-fl", is_flag=True)
+@click.option("--focal_loss_gamma", "-g", default=0.5)
 def main(**kwargs):
     """
     Train a transformers model to classify sentences based on originating novel.
@@ -108,13 +112,13 @@ def main(**kwargs):
         train_examples,
         book_titles,
         tokenizer,
-        TRAINING_ARGUMENTS["block_size"],
+        DATASET_ARGUMENTS["block_size"],
         predict=False)
     eval_dataset = dataset_utils.MultilabelDataset(
         eval_examples,
         book_titles,
         tokenizer,
-        TRAINING_ARGUMENTS["block_size"],
+        DATASET_ARGUMENTS["block_size"],
         predict=False)
 
     # train model
@@ -127,7 +131,9 @@ def main(**kwargs):
         book_titles,
         append_eval_results=kwargs["append_eval_results"],
         do_eval=True,
-        do_class_weights=kwargs["do_class_weights"]
+        do_class_weights=kwargs["do_class_weights"],
+        do_focal_loss=kwargs["do_focal_loss"],
+        focal_loss_gamma=kwargs["focal_loss_gamma"]
     )
 
     # create and save inference config
@@ -137,7 +143,7 @@ def main(**kwargs):
         None,
         "multilabel")
     inference_config = configs.InferenceConfig(
-        trained_model_config, book_titles, TRAINING_ARGUMENTS["block_size"])
+        trained_model_config, book_titles, DATASET_ARGUMENTS["block_size"])
     configs.save_config_for_inference(inference_config, kwargs["inference_config_filepath"])
 
 
